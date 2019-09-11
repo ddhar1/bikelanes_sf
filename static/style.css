@@ -1,0 +1,22 @@
+/* thank u, https://www.w3schools.com/howto/howto_js_full_page_tabs.asp 
+*/
+
+/* {box-sizing: border-box} */
+
+body, html {
+  font-family: Arial;
+  font: 12px;
+}
+
+#accidents_by_neigh_bikelane_year {
+	width: 75%;
+	height: 50%;
+	position: absolute;
+	top:0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+  	margin: 40px;
+	//margin: auto;
+	
+}
