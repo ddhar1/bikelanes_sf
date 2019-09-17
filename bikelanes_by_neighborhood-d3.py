@@ -68,10 +68,6 @@ def dated_url_for(endpoint, **values):
             values['q'] = int(os.stat(file_path).st_mtime)
     return url_for(endpoint, **values)
 
-@app.route('/static/test_data')
-def get_d3_data():
-    test_data = pd.DataFrame([ { "name": "Original Word Count","wc": 100},{"name": "Model Word Count","wc": 90}])
-    return test_data.to_csv()
 
 @app.route('/')
 @app.route('/index.html') # ties route to upcoming def to front page of website
@@ -99,20 +95,28 @@ def index():
                            #nobikelane = accident_counts_bydistrict_nobikelane_json) 
     
     test_data = pd.DataFrame([ { "name": "Original Word Count","wc": 100},{"name": "Model Word Count","wc": 90}])
-    execel_file = StringIO.StringIO()
-    filename = "%s.csv" % ('output file')
-    df.to_csv(execel_file, encoding='utf-8')
-    csv_output = execel_file.getvalue()
-    execel_file.close()
+    #execel_file = StringIO.StringIO()
+    #filename = "%s.csv" % ('output file')
+    #df.to_csv(execel_file, encoding='utf-8')
+    #csv_output = execel_file.getvalue()
+    #execel_file.close()
     
-    #chart_data = test_data.to_dict(orient='records')
-    #chart_data = json.dumps(chart_data, indent=2)
-    #data = {'chart_data': chart_data}                       
+    # make not super useful json
+    chart_data = test_data.to_dict(orient='records')
+    chart_data = json.dumps(chart_data, indent=2)
+    data = {'chart_data': chart_data}                       
     #test_data = test_data.to_json()                        
     return render_template("index.html") 
 	# Embed plot into HTML via Flask Render
 	#script, div = components(plot)
    # render template takes the page url that renders this flask app, as well as 
+
+@app.route('/data1.csv')
+def get_d3_data():
+    df = pd.DataFrame([ { "name": "Original Word Count","wc": 100},{"name": "Model Word Count","wc": 90}])
+ 
+    # Constructed however you need it
+    return df.to_csv()
 
 # if you want more pages, you would declare other def such as def contact, home, etc!
 # unsure at this point if there are args in the index page

@@ -5,58 +5,34 @@
 <title>Relationship between SF Roads and Traffic Accidents</title>
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
 <script type="text/javascript" src ="{{ url_for('static', filename='d3/d3.min.js') }}"></script> 
+
+<script src ="{{ url_for('static', filename='papaparse.min.js') }}"></script> ]]
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
 </head>
 <body>
-
 <div id="accidents_by_neigh_bikelane_year"></div>
+
+
 <script type="text/javascript">
-/* const barData2 = {{data.chart_data | safe }};
-function stringify(obj_from_json){
-    if(typeof obj_from_json !== "object" || Array.isArray(obj_from_json)){
-        // not an object, stringify using native function
-        return JSON.stringify(obj_from_json);
-    }
-    // Implements recursive object serialization according to JSON spec
-    // but without quotes around the keys.
-    let props = Object
-        .keys(obj_from_json)
-        .map(key => `${key}:${stringify(obj_from_json[key])}`)
-        .join(",");
-    return `{${props}}`;
-}
-
-barData = stringify( barData2); 
-
- alert(barData.wc);*/
-
-d3.tsv("static/test_data", function(data) {
-  console.log(data); // Do something with data
-});
-</script>
-    
-   const w = 1000;
+const w = 1000;
     const h = 200;
 
- const svg = d3.select("#accidents_by_neigh_bikelane_year")
+d3.select("#accidents_by_neigh_bikelane_year")
                   .append("svg")
                  .attr("width", w)
                   .attr("height", h)
 				  .style("background-color", "pink");
-				  
-	
-    /*svg.selectAll("rect")
-       .data( barData.wc )
-	   .enter()
-       .append("rect")
-       .attr("x", (d, i) => (i * 40))
-       .attr("y", (d, i) => (h - 3 * d))
-       .attr("width", 25)
-       .attr("height", (d, i) => (3 * d ) )
-	   .attr( "fill", "red") */
-       ;
+
+   
+
+console.log( '/data1.csv' );
+ 
+  
 </script>
 
- 
+
    
 </body>
 </html> 
