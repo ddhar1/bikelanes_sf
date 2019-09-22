@@ -4,35 +4,69 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Relationship between SF Roads and Traffic Accidents</title>
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
+
 <script type="text/javascript" src ="{{ url_for('static', filename='d3/d3.min.js') }}"></script> 
+<script src="https://code.jquery.com/jquery-3.4.1.js"></script>
 
-<script src ="{{ url_for('static', filename='papaparse.min.js') }}"></script> ]]
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
 </head>
 <body>
+<select name="districts" method="GET" action="/">
+    {% for district in districts %}
+        <option value="{{district}}" SELECTED>{{district}}</option>"
+    {% endfor %}
+</select>
 <div id="accidents_by_neigh_bikelane_year"></div>
 
-
 <script type="text/javascript">
-const w = 1000;
-    const h = 200;
+const w = 16*40+20;
+const h = 400;
 
-d3.select("#accidents_by_neigh_bikelane_year")
-                  .append("svg")
-                 .attr("width", w)
+const svg = d3.select("#accidents_by_neigh_bikelane_year")
+                  .append("svg") // creates chart armenian
+                 .attr("width", w) // width and height of the server
                   .attr("height", h)
-				  .style("background-color", "pink");
+				  //.style("background-color", "grey")
+				  ; // background-color
+				  
+var bikelanes_exist = {{ accident_counts_bydistrict_yesbikelane_json.accident_counts_bydistrict_yesbikelane_json | safe }};
 
-   
+bikelanes_exist = bikelanes_exist.filter(function(val) {
+  return (val.PdDistrict === 'TENDERLOIN');
+});
 
-console.log( '/data1.csv' );
- 
-  
+console.log( bikelanes_exist);
+
+/* filter data by user input somewhere here i guess */
+
+year = [];
+std_num_accidents = [];
+bikelanes_exist.forEach( // for each, what is a row in the df, but a point in the array bikelanes_exist 
+	function(val) {  
+	year.push(val.accident_year);
+	std_num_accidents.push(val.std_metric);  
+	} );
+
+    svg.selectAll("rect")
+       .data(std_num_accidents)
+       .enter()
+       .append("rect")
+       .attr("x", (d, i) => ((i+1) * 40)+10)
+       .attr("y", (d, i) => h - d*3-60)
+       .attr("width", 30)
+       .attr("height", (d, i) => d*3 )
+       .attr("fill", "navy");
+	 
+	 svg.selectAll("text")
+       .data(year)
+       .enter()
+	   .append("text") //text element is another shape, like the rect element
+	   .text((d) => d)
+	   .attr("x", (d, i) => ((i+1) * 40)+10)
+       .attr("y", (d, i) => h-25)
+	   .style('fill', 'black')
+	   .style('font-size', '10px');
+
 </script>
-
-
-   
 </body>
 </html> 

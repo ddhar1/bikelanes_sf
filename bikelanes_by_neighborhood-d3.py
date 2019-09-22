@@ -7,7 +7,6 @@ Created on Sun Aug 18 11:46:07 2019
 
 import json
 from flask import Flask, render_template, url_for
-from plotnine import *
 import pandas as pd
 import numpy as np
 import os
@@ -50,15 +49,13 @@ accident_counts_bydistrict_bikelane_exist = accident_counts_bydistrict_bikelane_
        'road_length', 'bikelane_length_haver'], axis = 1)
 
 # Start a new flask app
-app = Flask(__name__, static_url_path='/static') 
-# where static_url_path is location of static files such as d3, .css
+app = Flask(__name__, static_url_path='/static') # where static_url_path is location of static files such as d3, .css
 
 # prevent browser caching
 # https://stackoverflow.com/questions/21714653/flask-css-not-updating
 @app.context_processor
 def override_url_for():
     return dict(url_for=dated_url_for)
-
 def dated_url_for(endpoint, **values):
     if endpoint == 'static':
         filename = values.get('filename', None)
@@ -78,45 +75,47 @@ def index():
     #    current_feature_name = 2003
     #plot2 = create_figure( current_feature_name ) # returns a temporary image file
 
+
+## accident_counts_bydistrict_yesbikelane
     accident_counts_bydistrict_yesbikelane = accident_counts_bydistrict_bikelane_exist.loc[accident_counts_bydistrict_bikelane_exist.bikelane_exist == True, ]
     accident_counts_bydistrict_yesbikelane = accident_counts_bydistrict_yesbikelane.drop('bikelane_exist', axis = 1)
 
     accident_counts_bydistrict_yesbikelane_dict = accident_counts_bydistrict_yesbikelane.to_dict(orient='records')
     accident_counts_bydistrict_yesbikelane_json = json.dumps(accident_counts_bydistrict_yesbikelane_dict, indent=2)
-    accident_counts_bydistrict_yesbikelane_json = {'chart_data': accident_counts_bydistrict_yesbikelane_json}
+    accident_counts_bydistrict_yesbikelane_json = {'accident_counts_bydistrict_yesbikelane_json': accident_counts_bydistrict_yesbikelane_json}
 
-    accident_counts_bydistrict_nobikelane = accident_counts_bydistrict_bikelane_exist.loc[accident_counts_bydistrict_bikelane_exist.bikelane_exist == False, ]
-    accident_counts_bydistrict_nobikelane = accident_counts_bydistrict_nobikelane.drop('bikelane_exist', axis = 1)
-    accident_counts_bydistrict_nobikelane_dict = accident_counts_bydistrict_nobikelane.to_dict(orient='records')
-    accident_counts_bydistrict_nobikelane_json = json.dumps(accident_counts_bydistrict_nobikelane_dict, indent=2)
-    accident_counts_bydistrict_nobikelane_json = {'chart_data': accident_counts_bydistrict_nobikelane_json}
+    districts = np.unique(accident_counts_bydistrict_yesbikelane.PdDistrict)
+    #accident_counts_bydistrict_nobikelane = accident_counts_bydistrict_bikelane_exist.loc[accident_counts_bydistrict_bikelane_exist.bikelane_exist == False, ]
+    #accident_counts_bydistrict_nobikelane = accident_counts_bydistrict_nobikelane.drop('bikelane_exist', axis = 1)
+    #accident_counts_bydistrict_nobikelane_dict = accident_counts_bydistrict_nobikelane.to_dict(orient='records')
+    #accident_counts_bydistrict_nobikelane_json = json.dumps(accident_counts_bydistrict_nobikelane_dict, indent=2)
+    #accident_counts_bydistrict_nobikelane_json = {'chart_data': accident_counts_bydistrict_nobikelane_json}
 
     #return render_template("index.html", yesbikelane=accident_counts_bydistrict_yesbikelane_json,
                            #nobikelane = accident_counts_bydistrict_nobikelane_json) 
     
-    test_data = pd.DataFrame([ { "name": "Original Word Count","wc": 100},{"name": "Model Word Count","wc": 90}])
-    #execel_file = StringIO.StringIO()
-    #filename = "%s.csv" % ('output file')
-    #df.to_csv(execel_file, encoding='utf-8')
-    #csv_output = execel_file.getvalue()
-    #execel_file.close()
     
-    # make not super useful json
-    chart_data = test_data.to_dict(orient='records')
-    chart_data = json.dumps(chart_data, indent=2)
-    data = {'chart_data': chart_data}                       
-    #test_data = test_data.to_json()                        
-    return render_template("index.html") 
+    # converts dataframe to dictionary, which is then converted to json
+    # maybe consider 
+    #df = pd.DataFrame( [{ "name": "Original Word Count","wc": 100},{"name": "Model Word Count","wc": 90}] )
+    #chart_data = df.to_dict(orient='records')
+    #chart_data = json.dumps(chart_data, indent=2) # changes dictionary to json formatted string, which we 
+    #data = {'chart_data': chart_data} # dictionary we'll send to web browswer
+    return render_template("index.html", accident_counts_bydistrict_yesbikelane_json=accident_counts_bydistrict_yesbikelane_json, \
+                           districts=districts  )
+
 	# Embed plot into HTML via Flask Render
 	#script, div = components(plot)
    # render template takes the page url that renders this flask app, as well as 
 
-@app.route('/data1.csv')
-def get_d3_data():
-    df = pd.DataFrame([ { "name": "Original Word Count","wc": 100},{"name": "Model Word Count","wc": 90}])
- 
+#@app.route('/data1.json')
+#def get_d3_data():
+#    df = pd.DataFrame([ { "name": "Original Word Count","wc": 100},{"name": "Model Word Count","wc": 90}])
+    
+    #chart_data = test_data.to_dict(orient='records')
+    
     # Constructed however you need it
-    return df.to_csv()
+#    return df.to_json(orient="records")
 
 # if you want more pages, you would declare other def such as def contact, home, etc!
 # unsure at this point if there are args in the index page
