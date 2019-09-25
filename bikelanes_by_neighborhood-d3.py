@@ -18,28 +18,23 @@ accidents_bikelane_road = pd.read_csv(r'C:\Users\Divya\Google Drive\bike-lane-co
 year_names = np.unique(accidents_bikelane_road['accident_year']).tolist()
 
 def calc_standard( row ):
+	''' calc_standard standardizes the number accidents metric by road length '''
     if row['bikelane_exist'] == "No":
         return (row['traffic_accidents']/row['road_length'] )
     else:
         return (row['traffic_accidents'] /row['bikelane_length_haver'])
-    
+
 def isWeekday( x ):
+	''' Creates an indicator for whether or not the day of the week in the column is a weekday
+	'''
     if x in ( 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday' ):
         return('Weekday')
     else: # assuming no errors in our dataset, oc
         return('Weekend')
-        
+# Not applying isWeekday to the accident dataset in the mean time - will be used for a future graph    
 #accidents_bikelane_road['isWeekday'] = accidents_bikelane_road.DayOfWeek.apply( lambda x: isWeekday( x))
 
-def calc_standard( row ):
-    """ Standardizes accidents measure by 
-        length of road with and without a bike lane
-    """
-    if row['bikelane_exist'] == "No":
-        return (row['accident_counts']/row['road_length'] )
-    else:
-        return (row['accident_counts'] /row['bikelane_length_haver'])
-
+# Data Manipulations to get a graph that shows standardized number of accidents by year, for a SF District
 accident_counts_bydistrict_bikelane_exist = accidents_bikelane_road.groupby(['bikelane_exist', 'PdDistrict', 'accident_year', 'cnn_of_road', 'globalid', 'road_length', 'bikelane_length_haver']).agg({'Category':'count'}).reset_index()
 accident_counts_bydistrict_bikelane_exist.rename( columns = {'Category': 'accident_counts'}, inplace = True)
 accident_counts_bydistrict_bikelane_exist = accident_counts_bydistrict_bikelane_exist.groupby( ['bikelane_exist', 'PdDistrict', 'accident_year'], as_index = False)['accident_counts','road_length', 'bikelane_length_haver'].sum()
@@ -48,8 +43,10 @@ accident_counts_bydistrict_bikelane_exist['std_metric'] = accident_counts_bydist
 accident_counts_bydistrict_bikelane_exist = accident_counts_bydistrict_bikelane_exist.drop( ['accident_counts',
        'road_length', 'bikelane_length_haver'], axis = 1)
 
+
 # Start a new flask app
-app = Flask(__name__, static_url_path='/static') # where static_url_path is location of static files such as d3, .css
+app = Flask(__name__, static_url_path='/static') 
+# where static_url_path is location of static files such as d3, .css
 
 # prevent browser caching
 # https://stackoverflow.com/questions/21714653/flask-css-not-updating
@@ -65,26 +62,24 @@ def dated_url_for(endpoint, **values):
             values['q'] = int(os.stat(file_path).st_mtime)
     return url_for(endpoint, **values)
 
-
+# Flask will send returned information to main page of the app
 @app.route('/')
 @app.route('/index.html') # ties route to upcoming def to front page of website
 def index():
-    # Determine the selected feature
-    #current_feature_name = request.args.get("feature_name")
-    #if current_feature_name == None:
-    #    current_feature_name = 2003
-    #plot2 = create_figure( current_feature_name ) # returns a temporary image file
 
-
-## accident_counts_bydistrict_yesbikelane
+	# In order to have one color for accident counts on a bike lane, and another graph color for accident counts
+	# off a bike lane, I seperate the dataframe into two groups. One on a bikelane, and one off.
     accident_counts_bydistrict_yesbikelane = accident_counts_bydistrict_bikelane_exist.loc[accident_counts_bydistrict_bikelane_exist.bikelane_exist == True, ]
     accident_counts_bydistrict_yesbikelane = accident_counts_bydistrict_yesbikelane.drop('bikelane_exist', axis = 1)
-
+	
+	# converts dataframe to dictionary, which is then converted to json
     accident_counts_bydistrict_yesbikelane_dict = accident_counts_bydistrict_yesbikelane.to_dict(orient='records')
     accident_counts_bydistrict_yesbikelane_json = json.dumps(accident_counts_bydistrict_yesbikelane_dict, indent=2)
     accident_counts_bydistrict_yesbikelane_json = {'accident_counts_bydistrict_yesbikelane_json': accident_counts_bydistrict_yesbikelane_json}
-
+	
+	# List of unique districts that we'll use to create drop down in javascript
     districts = np.unique(accident_counts_bydistrict_yesbikelane.PdDistrict)
+
     #accident_counts_bydistrict_nobikelane = accident_counts_bydistrict_bikelane_exist.loc[accident_counts_bydistrict_bikelane_exist.bikelane_exist == False, ]
     #accident_counts_bydistrict_nobikelane = accident_counts_bydistrict_nobikelane.drop('bikelane_exist', axis = 1)
     #accident_counts_bydistrict_nobikelane_dict = accident_counts_bydistrict_nobikelane.to_dict(orient='records')
@@ -94,32 +89,10 @@ def index():
     #return render_template("index.html", yesbikelane=accident_counts_bydistrict_yesbikelane_json,
                            #nobikelane = accident_counts_bydistrict_nobikelane_json) 
     
-    
-    # converts dataframe to dictionary, which is then converted to json
-    # maybe consider 
-    #df = pd.DataFrame( [{ "name": "Original Word Count","wc": 100},{"name": "Model Word Count","wc": 90}] )
-    #chart_data = df.to_dict(orient='records')
-    #chart_data = json.dumps(chart_data, indent=2) # changes dictionary to json formatted string, which we 
-    #data = {'chart_data': chart_data} # dictionary we'll send to web browswer
+  
     return render_template("index.html", accident_counts_bydistrict_yesbikelane_json=accident_counts_bydistrict_yesbikelane_json, \
                            districts=districts  )
 
-	# Embed plot into HTML via Flask Render
-	#script, div = components(plot)
-   # render template takes the page url that renders this flask app, as well as 
-
-#@app.route('/data1.json')
-#def get_d3_data():
-#    df = pd.DataFrame([ { "name": "Original Word Count","wc": 100},{"name": "Model Word Count","wc": 90}])
-    
-    #chart_data = test_data.to_dict(orient='records')
-    
-    # Constructed however you need it
-#    return df.to_json(orient="records")
-
-# if you want more pages, you would declare other def such as def contact, home, etc!
-# unsure at this point if there are args in the index page
-# delete these comments about flask apps later! not v professional tbh
 
 # With debug=True, Flask server will auto-reload 
 # when there are code changes
