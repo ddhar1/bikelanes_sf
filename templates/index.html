@@ -5,13 +5,14 @@
 <title>Relationship between SF Roads and Traffic Accidents</title>
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
 
-<script type="text/javascript" src ="{{ url_for('static', filename='d3/d3.min.js') }}"></script> 
+<script type="text/javascript" src ="{{ url_for('static', filename='d3/d3.min.js') }}"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
 
 
 </head>
 <body>
-<select name="districts" method="GET" action="/">
+<select id="districts" method="GET" action="/">
+  <!-- for district in districts, create an option value -->
     {% for district in districts %}
         <option value="{{district}}" SELECTED>{{district}}</option>"
     {% endfor %}
@@ -19,54 +20,90 @@
 <div id="accidents_by_neigh_bikelane_year"></div>
 
 <script type="text/javascript">
+
 const w = 16*40+20;
 const h = 400;
 
-const svg = d3.select("#accidents_by_neigh_bikelane_year")
-                  .append("svg") // creates chart armenian
+const canvas = d3.select("#accidents_by_neigh_bikelane_year")
+                  .append("svg") // creates chart
                  .attr("width", w) // width and height of the server
                   .attr("height", h)
 				  //.style("background-color", "grey")
 				  ; // background-color
-				  
+
+// uploads the json from flask
 var bikelanes_exist = {{ accident_counts_bydistrict_yesbikelane_json.accident_counts_bydistrict_yesbikelane_json | safe }};
 
-bikelanes_exist = bikelanes_exist.filter(function(val) {
-  return (val.PdDistrict === 'TENDERLOIN');
+// from https://stackoverflow.com/questions/52119854/d3-javascript-filter-data-according-to-input
+function filterDataset( selectedDistrict )
+{
+  var bikelanes_exist_filtered = bikelanes_exist.filter(
+    function(val)
+    {
+    return ( val.PdDistrict === selectedDistrict);
+  });
+
+  return bikelanes_exist_filtered;
+}
+
+function generateGraph(bikelanes_exist_filtered) {
+  console.log( bikelanes_exist_filtered);
+    year = [];
+    std_num_accidents = [];
+
+    // converts numerical columns into numerical values (originally strings)
+    // wonder if there's a way to operation and select these columns by datatype
+    bikelanes_exist_filtered
+    .forEach( // for each, what is a row in the df, but a point in the array bikelanes_exist
+    	function(val)
+      {
+      	year.push(val.accident_year);
+      	std_num_accidents.push(val.std_metric);
+    	}
+    );
+
+    // remove previous elements and make new graph
+    canvas.selectAll("*").remove();
+
+    // bind data
+    canvas.selectAll("rect")
+           .data(std_num_accidents)
+           .enter()
+           .append("rect")
+           .attr("x", (d, i) => ((i+1) * 40)+10)
+           .attr("y", (d, i) => h - d*3-60)
+           .attr("width", 30)
+           .attr("height", (d, i) => d*3 )
+           .attr("fill", "navy");
+
+
+  canvas.selectAll("text")
+        .data(year)
+        .enter()
+    	  .append("text") //text element is another shape, like the rect element
+    	  .text((d) => d)
+    	  .attr("x", (d, i) => ((i+1) * 40)+10)
+        .attr("y", (d, i) => h-25)
+    	  .style('fill', 'black')
+    	  .style('font-size', '10px');
+}
+
+function newSelection(newDistrict)
+{
+  generateGraph( filterDataset(newDistrict) );
+}
+
+
+d3.select('#districts')
+  .on('change', function() {
+    var newDistrict = d3.select(this).property('value');
+    newSelection(newDistrict);
 });
 
-console.log( bikelanes_exist);
 
-/* filter data by user input somewhere here i guess */
-
-year = [];
-std_num_accidents = [];
-bikelanes_exist.forEach( // for each, what is a row in the df, but a point in the array bikelanes_exist 
-	function(val) {  
-	year.push(val.accident_year);
-	std_num_accidents.push(val.std_metric);  
-	} );
-
-    svg.selectAll("rect")
-       .data(std_num_accidents)
-       .enter()
-       .append("rect")
-       .attr("x", (d, i) => ((i+1) * 40)+10)
-       .attr("y", (d, i) => h - d*3-60)
-       .attr("width", 30)
-       .attr("height", (d, i) => d*3 )
-       .attr("fill", "navy");
-	 
-	 svg.selectAll("text")
-       .data(year)
-       .enter()
-	   .append("text") //text element is another shape, like the rect element
-	   .text((d) => d)
-	   .attr("x", (d, i) => ((i+1) * 40)+10)
-       .attr("y", (d, i) => h-25)
-	   .style('fill', 'black')
-	   .style('font-size', '10px');
+// generate initial legend
+newSelection('TENDERLOIN');
 
 </script>
 </body>
-</html> 
+</html>
