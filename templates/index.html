@@ -2,40 +2,58 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Relationship between SF Roads and Traffic Accidents</title>
+
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
 
 <script type="text/javascript" src ="{{ url_for('static', filename='d3/d3.min.js') }}"></script>
-<script src="https://code.jquery.com/jquery-3.4.1.js"></script>
-
 
 </head>
 <body>
+
+<div>
+  <div id= "accidents_by_neigh_bikelane_year"></div>
+  <div id="accidents_bikelane_not_exist">
+  </div>
+  <div id = "bottomAxis">
+
+  </div>
+</div>
+
 <select id="districts" method="GET" action="/">
   <!-- for district in districts, create an option value -->
     {% for district in districts %}
         <option value="{{district}}" SELECTED>{{district}}</option>"
     {% endfor %}
 </select>
-<div id="accidents_by_neigh_bikelane_year"></div>
 
 <script type="text/javascript">
 
-const w = 16*40+20;
-const h = 400;
+const w = 16*80;
+const h = 100;
 
 const canvas = d3.select("#accidents_by_neigh_bikelane_year")
                   .append("svg") // creates chart
                  .attr("width", w) // width and height of the server
-                  .attr("height", h)
-				  //.style("background-color", "grey")
-				  ; // background-color
+                  .attr("height", h);
+
+const canvas2 = d3.select("#accidents_bikelane_not_exist")
+                .append("svg")
+                .attr("width", w)
+                .attr("height", h);
+
+const bottomAxis = d3.select( "#bottomAxis" )
+                .append( "svg")
+                .attr("width", w)
+                .attr("height", h);
 
 // uploads the json from flask
 var bikelanes_exist = {{ accident_counts_bydistrict_yesbikelane_json.accident_counts_bydistrict_yesbikelane_json | safe }};
+var bikelanes_not_exist = {{ accident_counts_bydistrict_nobikelane_json.accident_counts_bydistrict_nobikelane_json | safe }};
 
 // from https://stackoverflow.com/questions/52119854/d3-javascript-filter-data-according-to-input
-function filterDataset( selectedDistrict )
+function filterDataset_bikelanes_exist( selectedDistrict )
 {
   var bikelanes_exist_filtered = bikelanes_exist.filter(
     function(val)
@@ -46,10 +64,22 @@ function filterDataset( selectedDistrict )
   return bikelanes_exist_filtered;
 }
 
-function generateGraph(bikelanes_exist_filtered) {
-  console.log( bikelanes_exist_filtered);
+function filterDataset_bikelanes_not_exist( selectedDistrict )
+{
+  var bikelanes_not_exist_filtered = bikelanes_not_exist.filter(
+    function(val)
+    {
+    return ( val.PdDistrict === selectedDistrict);
+  });
+
+  return bikelanes_not_exist_filtered;
+}
+
+
+function generateGraph(bikelanes_exist_filtered, bikelanes_not_exist_filtered) {
     year = [];
-    std_num_accidents = [];
+    std_num_accidents_exist = [];
+    std_num_accidents_not_exist = [];
 
     // converts numerical columns into numerical values (originally strings)
     // wonder if there's a way to operation and select these columns by datatype
@@ -57,40 +87,110 @@ function generateGraph(bikelanes_exist_filtered) {
     .forEach( // for each, what is a row in the df, but a point in the array bikelanes_exist
     	function(val)
       {
-      	year.push(val.accident_year);
-      	std_num_accidents.push(val.std_metric);
+      	std_num_accidents_exist.push(val.std_metric);
     	}
     );
 
-    // remove previous elements and make new graph
+
+    bikelanes_not_exist_filtered
+    .forEach(
+      function(val)
+      {
+        year.push(val.accident_year);
+        std_num_accidents_not_exist.push(val.std_metric);
+      }
+    );
+
+    var std_num_accidents_all = std_num_accidents_not_exist.concat( std_num_accidents_exist);
+
+    // clear svg to load new data
     canvas.selectAll("*").remove();
+    canvas2.selectAll("*").remove();
+    bottomAxis.selectAll("*").remove();
+    // y axis
+    var y = d3.scaleLinear()
+      .domain( [0, Math.max.apply(Math,std_num_accidents_all)] )
+      .range([0, w ]);
 
-    // bind data
+    canvas.append( "g")
+      .attr("transfer", "translate(0,0)")
+      .call(d3.axisLeft(y));
+      
+    // accidents exist data
     canvas.selectAll("rect")
-           .data(std_num_accidents)
-           .enter()
-           .append("rect")
-           .attr("x", (d, i) => ((i+1) * 40)+10)
-           .attr("y", (d, i) => h - d*3-60)
-           .attr("width", 30)
-           .attr("height", (d, i) => d*3 )
-           .attr("fill", "navy");
+      .data(std_num_accidents_exist)
+      .enter()
+      .append("rect")
+      .attr("x", (d, i) => (i-1) * 40+ 30*(i-1)+10)
+      .attr("y", (d, i) => h - d*3-20)
+      .attr("width", 30)
+      .attr("height", (d, i) => d*3 )
+      .attr("fill", "navy");
 
+        // accidents don't exist data
+  canvas2.selectAll("rect")
+      .data(std_num_accidents_not_exist)
+      .enter()
+      .append("rect")
+      .attr("x", (d, i) => (i-1) * 40+ 30*(i)+10)
+      .attr("y", (d, i) => h - d*3-20)
+      .attr("width", 30)
+      .attr("height", (d, i) => d*3 )
+      .attr("fill", "red");
 
-  canvas.selectAll("text")
-        .data(year)
-        .enter()
-    	  .append("text") //text element is another shape, like the rect element
-    	  .text((d) => d)
-    	  .attr("x", (d, i) => ((i+1) * 40)+10)
-        .attr("y", (d, i) => h-25)
-    	  .style('fill', 'black')
-    	  .style('font-size', '10px');
+    // accident year
+    bottomAxis.selectAll("text")
+      .data(year)
+      .enter()
+    	.append("text") 
+    	.text((d) => d)
+    	.attr("x", (d, i) => 15*i + (i-1)*55+10)
+      .attr("y", h  - 1)
+    	.style('fill', 'black')
+    	.style('font-size', '10px');
+/*
+    canvas.selectAll("line")
+      .data(year)
+      .enter()
+    	.append("line") 
+    	.text((d) => d)
+    	.attr("x1", (d, i) => ((i+1) * 40)+ 30*(i-.5)+15)
+      .attr("y1", (d, i) => h-60)
+      .attr("x2", (d, i) => ((i+1) * 40)+ 30*(i-.5)+15)
+      .attr("y2", (d, i) => h-55)
+    	.attr('stroke', 'black')
+    	.attr('stroke-width', '1');
+*/
+
+    /* 
+    // horizontal line - possible x axis     
+    canvas
+      .append("line")
+      .attr("x1", 0)
+      .attr("y1", h-60)
+      .attr("x2", w)
+      .attr("y2", h-60)
+      .attr("stroke", "black")
+      .attr("stroke-width", 1);
+      */
+/*
+  // accidents don't bikelanes_exist
+  canvas2.selectAll("text")
+      .data(std_num_accidents_not_exist)
+      .enter()
+      .append("text")
+      .text((d)=> d)
+      .attr("x", (d, i) => ((i) * 40))
+      .attr("y", (d, i) => h - d*3-120)
+      .style('fill', 'black')
+      .style('font-size', '10px');
+*/
+
 }
 
 function newSelection(newDistrict)
 {
-  generateGraph( filterDataset(newDistrict) );
+  generateGraph( filterDataset_bikelanes_exist(newDistrict), filterDataset_bikelanes_not_exist(newDistrict));
 }
 
 
