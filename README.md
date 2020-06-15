@@ -1,10 +1,21 @@
-# Bike lane study
-For Code For SF (a work in progress)
+# Understanding impact of bike lanes vs Traffic Accidents
 
-BikeLanestudy - Update 7-14.ipynb - This python workbook is the preliminary data cleaning work I have been doing in order to examine the impact of additional bike lanesin SF on accident rates. I use bike lane data, traffic reports filed by the police and census bureau data. Ultimately I use a method of standardizing bike lanesin
+I used data the city of San Francisco to see if there was correlations between the number of traffic accidents and whether or not a bike lane was on a road.
 
-bikelanes_by_neighborhood-d3.py, templates/, static/ - parts of a flask/d3 app I am making for others to play with the graphs at year/neighborhood basis, depending on the graph. A work in progress.
+## Data
+* Bike lane Data (where bike lanes are, when installed, length of bike lane) was from DataSF
+* Traffic Accidents data, was subsetted from a list of Police Reports, again from DataSF
 
-### To-do list (basically what I would put on Trello)
-1. Drop down with javascript, that uses list of unique districts and refreshes graph on change
-2. Send data without bikelanes
+## Outline of analysis vs Files
+`01_DataCleaning.ipynb` - This python workbook is the preliminary data cleaning work I have been doing in order to examine the impact of additional bike lanesin SF on accident rates. I use bike lane data, traffic reports filed by the police.
+`02_Analysis` - preliminary charts to show how bike lanes vary with bike lane data, given time of day, neighborhood in SF, and year
+`03_Analysis_StdMetric' - I realize in the previous analysis that there is a lot more roads without a bike lane than with a bike lane. I standardize the number of accidents by amount of road type (by bike lane length of group if on a bike lane vs regular road if not on a bike lane). 
+* I notice that while there are more accidents off a bike lane with this metric when aggregated by district
+* but effect reverses when we split data on time of day and by district 
+* A regression (with controls for year, length of road) estimates that there are more accidents off a bike lane than on a bike lane, and bike lanes decrease accidents
+
+## Next Steps:
+Overall, it's hard to estimate the impact of bike lanes on accidents because there is a lot of variation in the data. A simple regrssion. But possible next steps I would do are
+* Cut standardized metric data by district and by Year
+* Add to the regression
+	* add a control for ratio of bike lane to length of road 
