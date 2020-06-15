@@ -12,25 +12,29 @@ import numpy as np
 import os
 
 # import the file which has accidents and the bike lane and raod it was on
-accidents_bikelane_road = pd.read_csv(r'C:\Users\Divya\Google Drive\bike-lane-code4sf\BikewayNetwork_edit\accidents_bikelanes_roads_wlengths.csv', engine='python')
+accidents_bikelane_road = pd.read_csv( 'BikewayNetwork_edit\\accidents_bikelanes_roads_wlengths.csv', engine='python')
 # alternative way of importing data: os.path.join('C:', 'Users', 'name')
 
 year_names = np.unique(accidents_bikelane_road['accident_year']).tolist()
 
 def calc_standard( row ):
-	''' calc_standard standardizes the number accidents metric by road length '''
+    ''' 
+    calc_standard standardizes the number accidents metric by road length 
+    '''
     if row['bikelane_exist'] == "No":
-        return (row['traffic_accidents']/row['road_length'] )
+        return (row['accident_counts']/row['road_length'] )
     else:
-        return (row['traffic_accidents'] /row['bikelane_length_haver'])
+        return (row['accident_counts'] /row['bikelane_length_haver'])
 
 def isWeekday( x ):
-	''' Creates an indicator for whether or not the day of the week in the column is a weekday
-	'''
-    if x in ( 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday' ):
+    ''' 
+    Creates an indicator for whether or not the day of the week in the column is a weekday
+    '''
+    if x in ( 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday' ) :
         return('Weekday')
     else: # assuming no errors in our dataset, oc
         return('Weekend')
+
 # Not applying isWeekday to the accident dataset in the mean time - will be used for a future graph    
 #accidents_bikelane_road['isWeekday'] = accidents_bikelane_road.DayOfWeek.apply( lambda x: isWeekday( x))
 
@@ -67,31 +71,31 @@ def dated_url_for(endpoint, **values):
 @app.route('/index.html') # ties route to upcoming def to front page of website
 def index():
 
-	# In order to have one color for accident counts on a bike lane, and another graph color for accident counts
-	# off a bike lane, I seperate the dataframe into two groups. One on a bikelane, and one off.
+    # In order to have one color for accident counts on a bike lane, and another graph color for accident counts
+    # off a bike lane, I seperate the dataframe into two groups. One on a bikelane, and one off.
     accident_counts_bydistrict_yesbikelane = accident_counts_bydistrict_bikelane_exist.loc[accident_counts_bydistrict_bikelane_exist.bikelane_exist == True, ]
     accident_counts_bydistrict_yesbikelane = accident_counts_bydistrict_yesbikelane.drop('bikelane_exist', axis = 1)
-	
-	# converts dataframe to dictionary, which is then converted to json
+    
+    # converts dataframe to dictionary, which is then converted to json
     accident_counts_bydistrict_yesbikelane_dict = accident_counts_bydistrict_yesbikelane.to_dict(orient='records')
     accident_counts_bydistrict_yesbikelane_json = json.dumps(accident_counts_bydistrict_yesbikelane_dict, indent=2)
     accident_counts_bydistrict_yesbikelane_json = {'accident_counts_bydistrict_yesbikelane_json': accident_counts_bydistrict_yesbikelane_json}
-	
-	# List of unique districts that we'll use to create drop down in javascript
+    
+    # List of unique districts that we'll use to create drop down in javascript
     districts = np.unique(accident_counts_bydistrict_yesbikelane.PdDistrict)
 
-    #accident_counts_bydistrict_nobikelane = accident_counts_bydistrict_bikelane_exist.loc[accident_counts_bydistrict_bikelane_exist.bikelane_exist == False, ]
-    #accident_counts_bydistrict_nobikelane = accident_counts_bydistrict_nobikelane.drop('bikelane_exist', axis = 1)
-    #accident_counts_bydistrict_nobikelane_dict = accident_counts_bydistrict_nobikelane.to_dict(orient='records')
-    #accident_counts_bydistrict_nobikelane_json = json.dumps(accident_counts_bydistrict_nobikelane_dict, indent=2)
-    #accident_counts_bydistrict_nobikelane_json = {'chart_data': accident_counts_bydistrict_nobikelane_json}
+    accident_counts_bydistrict_nobikelane = accident_counts_bydistrict_bikelane_exist.loc[accident_counts_bydistrict_bikelane_exist.bikelane_exist == False, ]
+    accident_counts_bydistrict_nobikelane = accident_counts_bydistrict_nobikelane.drop('bikelane_exist', axis = 1)
+
+    accident_counts_bydistrict_nobikelane_dict = accident_counts_bydistrict_nobikelane.to_dict(orient='records')
+    accident_counts_bydistrict_nobikelane_json = json.dumps(accident_counts_bydistrict_nobikelane_dict, indent=2)
+    accident_counts_bydistrict_nobikelane_json = {'accident_counts_bydistrict_nobikelane_json': accident_counts_bydistrict_nobikelane_json}
 
     #return render_template("index.html", yesbikelane=accident_counts_bydistrict_yesbikelane_json,
                            #nobikelane = accident_counts_bydistrict_nobikelane_json) 
     
   
-    return render_template("index.html", accident_counts_bydistrict_yesbikelane_json=accident_counts_bydistrict_yesbikelane_json, \
-                           districts=districts  )
+    return render_template("index.html", accident_counts_bydistrict_yesbikelane_json=accident_counts_bydistrict_yesbikelane_json,  accident_counts_bydistrict_nobikelane_json=accident_counts_bydistrict_nobikelane_json, districts=districts  )
 
 
 # With debug=True, Flask server will auto-reload 
