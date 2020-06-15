@@ -11,7 +11,12 @@
 
 </head>
 <body>
-
+  <select id="districts" method="GET" action="/">
+    <!-- for district in districts, create an option value -->
+      {% for district in districts %}
+          <option value="{{district}}" SELECTED>{{district}}</option>"
+      {% endfor %}
+  </select>
 <div>
   <div id= "accidents_by_neigh_bikelane_year"></div>
   <div id="accidents_bikelane_not_exist">
@@ -21,12 +26,7 @@
   </div>
 </div>
 
-<select id="districts" method="GET" action="/">
-  <!-- for district in districts, create an option value -->
-    {% for district in districts %}
-        <option value="{{district}}" SELECTED>{{district}}</option>"
-    {% endfor %}
-</select>
+
 
 <script type="text/javascript">
 
@@ -60,7 +60,7 @@ function filterDataset_bikelanes_exist( selectedDistrict )
     {
     return ( val.PdDistrict === selectedDistrict);
   });
-
+  console.log(bikelanes_exist_filtered);
   return bikelanes_exist_filtered;
 }
 
